@@ -19,4 +19,4 @@ jobs:
         cache: maven
       # Run Maven tests
     - name: Run Maven tests
-      run: mvn clean install -Dskip.integration.tests=true
+      run: mvn verify -Dskip.integration.tests=true
