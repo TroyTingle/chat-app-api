@@ -1,8 +1,6 @@
 package com.ttingle.chat_app_api.service;
 
-import com.ttingle.chat_app_api.dto.auth.SignupRequest;
 import com.ttingle.chat_app_api.exceptions.UserNotFoundException;
-import com.ttingle.chat_app_api.factory.UserFactory;
 import com.ttingle.chat_app_api.model.Role;
 import com.ttingle.chat_app_api.model.User;
 import com.ttingle.chat_app_api.repository.UserRepository;
@@ -25,9 +23,6 @@ public class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private UserFactory userFactory;
 
     @InjectMocks
     private UserService userService;
@@ -102,18 +97,19 @@ public class UserServiceTest {
 
     @Test
     public void testCreateUser() {
-        SignupRequest signupRequest = new SignupRequest();
-        signupRequest.setUsername("newuser");
-        signupRequest.setEmail("newuser@example.com");
-        signupRequest.setPassword("password");
+        String username = "newuser";
+        String email = "newuser@example.com";
+        String password = "password";
+        User newUser = new User();
+        newUser.setUsername(username);
+        newUser.setEmail(email);
+        newUser.setPassword(password);
+        newUser.setRole(Role.ROLE_USER);
 
-        User user = new User();
-        user.setUsername("newuser");
-        when(userFactory.createUser(anyString(), anyString(), anyString())).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(newUser);
 
-        userService.createUser(signupRequest);
+        userService.createUser(username, email, password);
 
-        verify(userFactory, times(1)).createUser("newuser", "newuser@example.com", "password");
-        verify(userRepository, times(1)).save(user);
+        verify(userRepository, times(1)).save(any(User.class));
     }
 }

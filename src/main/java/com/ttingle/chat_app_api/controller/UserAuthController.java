@@ -62,7 +62,7 @@ public class UserAuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
         //Create new user
-        userService.createUser(signupRequest);
+        userService.createUser(signupRequest.getUsername(), signupRequest.getEmail(),passwordEncoder.encode(signupRequest.getPassword()));
         return ResponseEntity.ok("Signup Successful!");
     }
 

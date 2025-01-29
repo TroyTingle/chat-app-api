@@ -1,6 +1,5 @@
 package com.ttingle.chat_app_api.service;
 
-import com.ttingle.chat_app_api.dto.auth.SignupRequest;
 import com.ttingle.chat_app_api.exceptions.UserNotFoundException;
 import com.ttingle.chat_app_api.factory.UserFactory;
 import com.ttingle.chat_app_api.model.User;
@@ -20,11 +19,9 @@ import java.util.List;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final UserFactory userFactory;
 
-    public UserService(UserRepository userRepository, UserFactory userFactory){
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.userFactory = userFactory;
     }
 
     @Transactional(readOnly = true)
@@ -53,8 +50,8 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void createUser(SignupRequest signupRequest){
-        User newUser = userFactory.createUser(signupRequest.getUsername(), signupRequest.getEmail(), signupRequest.getPassword());
+    public void createUser(String username, String email, String password){
+        User newUser = UserFactory.createUser(username, email, password);
         this.saveUser(newUser);
     }
 }
