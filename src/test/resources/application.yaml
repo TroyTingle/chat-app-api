@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: chat-app-api
+  datasource:
+    url: jdbc:postgresql://test-url:5432/chat_app
+    username: test-db-username
+    password: test-db-password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+jwt:
+  expiration: 86400000
+  secret: test-secret
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+    com:
+      ttingle: DEBUG
