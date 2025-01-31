@@ -2,32 +2,27 @@ package com.ttingle.chat_app_api.service;
 
 import com.ttingle.chat_app_api.exceptions.FriendRequestException;
 import com.ttingle.chat_app_api.exceptions.NotFoundException;
-import com.ttingle.chat_app_api.exceptions.UserNotFoundException;
 import com.ttingle.chat_app_api.model.FriendRequest;
 import com.ttingle.chat_app_api.model.User;
 import com.ttingle.chat_app_api.repository.FriendRequestRepository;
-import com.ttingle.chat_app_api.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class FriendRequestService {
 
     private final FriendRequestRepository friendRequestRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public FriendRequestService(FriendRequestRepository friendRequestRepository, UserRepository userRepository) {
+    public FriendRequestService(FriendRequestRepository friendRequestRepository, UserService userService) {
         this.friendRequestRepository = friendRequestRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Transactional
-    public void sendFriendRequest(String senderUsername, String receiverUsername) {
-        User sender = userRepository.findByUsername(senderUsername)
-                .orElseThrow(() -> new UserNotFoundException(senderUsername));
-        User receiver = userRepository.findByUsername(receiverUsername)
-                .orElseThrow(() -> new UserNotFoundException(receiverUsername));
-
+    public void sendFriendRequest(User sender, User receiver) {
         // Check if a request already exists
         if (friendRequestRepository.existsBySenderAndReceiver(sender, receiver)) {
             throw new FriendRequestException("Friend request already sent");
@@ -42,9 +37,13 @@ public class FriendRequestService {
     }
 
     @Transactional
-    public void respondToFriendRequest(Long requestId, boolean accept) {
+    public void respondToFriendRequest(User recipient, Long requestId, boolean accept) {
         FriendRequest request = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Friend request not found"));
+
+        if(!request.getReceiver().equals(recipient)) {
+            throw new FriendRequestException("You are not the recipient of this request");
+        }
 
         if (accept) {
             request.setStatus(FriendRequest.RequestStatus.ACCEPTED);
@@ -52,13 +51,16 @@ public class FriendRequestService {
             User receiver = request.getReceiver();
             sender.getFriends().add(receiver);
             receiver.getFriends().add(sender);
-            userRepository.save(sender);
-            userRepository.save(receiver);
+            userService.saveUser(sender);
+            userService.saveUser(receiver);
         } else {
             request.setStatus(FriendRequest.RequestStatus.REJECTED);
         }
-
         friendRequestRepository.save(request);
+    }
+
+    public List<FriendRequest> getFriendRequestsForUser(User user) {
+        return friendRequestRepository.findAllByReceiver(user);
     }
 }
 
