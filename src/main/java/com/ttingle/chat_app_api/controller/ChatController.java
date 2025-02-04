@@ -1,5 +1,7 @@
 package com.ttingle.chat_app_api.controller;
 
+import com.ttingle.chat_app_api.dto.chat.GroupChatRequest;
+import com.ttingle.chat_app_api.dto.chat.SingleUserChatRequest;
 import com.ttingle.chat_app_api.model.Chat;
 import com.ttingle.chat_app_api.model.User;
 import com.ttingle.chat_app_api.service.ChatService;
@@ -30,34 +32,31 @@ public class ChatController {
     }
 
     @PostMapping("/1-2-1")
-    public ResponseEntity<Chat> createOneToOneChat(@AuthenticationPrincipal User user, @RequestBody String username) {
-        User participant = userService.findByUsername(username);
+    public ResponseEntity<Chat> createOneToOneChat(@AuthenticationPrincipal User user, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+        User participant = userService.findByUsername(singleUserChatRequest.getUsername());
         Chat chat = chatService.createOneToOneChat(user, participant);
         return new ResponseEntity<>(chat, HttpStatus.CREATED);
     }
 
     @PostMapping("/group")
-    public ResponseEntity<Chat> createGroupChat(@AuthenticationPrincipal User user,
-                                                @RequestBody String[] participants,
-                                                @RequestBody String groupName) {
-
-        Set<User> participantSet = Arrays.stream(participants)
+    public ResponseEntity<Chat> createGroupChat(@AuthenticationPrincipal User user, @RequestBody GroupChatRequest groupChatRequest) {
+        Set<User> participantSet = Arrays.stream(groupChatRequest.getParticipants())
                 .map(userService::findByUsername)
                 .collect(Collectors.toSet());
 
-        Chat chat = chatService.createGroupChat(user, participantSet, groupName);
+        Chat chat = chatService.createGroupChat(user, participantSet, groupChatRequest.getGroupName());
         return new ResponseEntity<>(chat, HttpStatus.CREATED);
     }
 
     @PostMapping("/{chatId}/participants")
-    public ResponseEntity<Void> addParticipantToGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User admin, @RequestBody String username) {
+    public ResponseEntity<Void> addParticipantToGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User admin, @RequestBody SingleUserChatRequest singleUserChatRequest) {
         Optional<Chat> chatOptional = chatService.getById(chatId);
         if (chatOptional.isPresent()) {
             Chat chat = chatOptional.get();
             if(chat.getCreator() != admin) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
-            User newParticipant = userService.findByUsername(username);
+            User newParticipant = userService.findByUsername(singleUserChatRequest.getUsername());
 
             chatService.addParticipantToGroupChat(chat, newParticipant);
             return ResponseEntity.ok().build();
@@ -67,14 +66,14 @@ public class ChatController {
     }
 
     @DeleteMapping("/{chatId}/participants")
-    public ResponseEntity<Void> removeParticipantFromGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User admin,@RequestBody String username) {
+    public ResponseEntity<Void> removeParticipantFromGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User admin, @RequestBody SingleUserChatRequest singleUserChatRequest) {
         Optional<Chat> chatOptional = chatService.getById(chatId);
         if (chatOptional.isPresent()) {
             Chat chat = chatOptional.get();
             if(chat.getCreator() != admin) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
-            User participant = userService.findByUsername(username);
+            User participant = userService.findByUsername(singleUserChatRequest.getUsername());
             chatService.removeParticipantFromGroupChat(chatOptional.get(), participant);
             return ResponseEntity.ok().build();
         } else {
