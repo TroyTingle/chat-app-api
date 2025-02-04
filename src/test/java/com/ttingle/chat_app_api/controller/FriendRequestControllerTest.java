@@ -1,5 +1,6 @@
 package com.ttingle.chat_app_api.controller;
 
+import com.ttingle.chat_app_api.dto.friends.AddFriendRequest;
 import com.ttingle.chat_app_api.model.FriendRequest;
 import com.ttingle.chat_app_api.model.User;
 import com.ttingle.chat_app_api.service.FriendRequestService;
@@ -38,9 +39,12 @@ public class FriendRequestControllerTest {
         User recipient = new User();
         recipient.setUsername("recipient");
 
+        AddFriendRequest addFriendRequest = new AddFriendRequest();
+        addFriendRequest.setUsername(recipient.getUsername());
+
         when(userService.findByUsername(anyString())).thenReturn(recipient);
 
-        ResponseEntity<String> response = friendRequestController.sendFriendRequest(sender, "recipient");
+        ResponseEntity<String> response = friendRequestController.sendFriendRequest(sender, addFriendRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Friend request sent", response.getBody());

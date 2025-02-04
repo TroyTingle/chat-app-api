@@ -1,5 +1,7 @@
 package com.ttingle.chat_app_api.controller;
 
+import com.ttingle.chat_app_api.dto.chat.GroupChatRequest;
+import com.ttingle.chat_app_api.dto.chat.SingleUserChatRequest;
 import com.ttingle.chat_app_api.model.Chat;
 import com.ttingle.chat_app_api.model.User;
 import com.ttingle.chat_app_api.service.ChatService;
@@ -38,6 +40,9 @@ public class ChatControllerTest {
         User user = new User();
         user.setUsername("user1");
 
+        SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
+        singleUserChatRequest.setUsername("user2");
+
         User participant = new User();
         participant.setUsername("user2");
 
@@ -46,7 +51,7 @@ public class ChatControllerTest {
         when(userService.findByUsername(anyString())).thenReturn(participant);
         when(chatService.createOneToOneChat(any(User.class), any(User.class))).thenReturn(chat);
 
-        ResponseEntity<Chat> response = chatController.createOneToOneChat(user, "user2");
+        ResponseEntity<Chat> response = chatController.createOneToOneChat(user, singleUserChatRequest);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(chat, response.getBody());
@@ -63,13 +68,17 @@ public class ChatControllerTest {
         User participant2 = new User();
         participant2.setUsername("user3");
 
+        GroupChatRequest groupChatRequest = new GroupChatRequest();
+        groupChatRequest.setParticipants(new String[]{"user2", "user3"});
+        groupChatRequest.setGroupName("Group Chat");
+
         Chat chat = new Chat();
 
         when(userService.findByUsername("user2")).thenReturn(participant1);
         when(userService.findByUsername("user3")).thenReturn(participant2);
         when(chatService.createGroupChat(any(User.class), any(Set.class), anyString())).thenReturn(chat);
 
-        ResponseEntity<Chat> response = chatController.createGroupChat(user, new String[]{"user2", "user3"}, "groupName");
+        ResponseEntity<Chat> response = chatController.createGroupChat(user, groupChatRequest);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(chat, response.getBody());
@@ -80,13 +89,16 @@ public class ChatControllerTest {
         User admin = new User();
         admin.setUsername("admin");
 
+        SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
+        singleUserChatRequest.setUsername("user2");
+
         Chat chat = new Chat();
         chat.setCreator(admin);
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
         when(userService.findByUsername(anyString())).thenReturn(new User());
 
-        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, "newuser");
+        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, singleUserChatRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(chatService, times(1)).addParticipantToGroupChat(any(Chat.class), any(User.class));
@@ -97,9 +109,12 @@ public class ChatControllerTest {
         User admin = new User();
         admin.setUsername("admin");
 
+        SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
+        singleUserChatRequest.setUsername("user2");
+
         when(chatService.getById(anyLong())).thenReturn(Optional.empty());
 
-        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, "newuser");
+        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, singleUserChatRequest);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(chatService, never()).addParticipantToGroupChat(any(Chat.class), any(User.class));
@@ -113,12 +128,15 @@ public class ChatControllerTest {
         User anotherUser = new User();
         anotherUser.setUsername("anotherUser");
 
+        SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
+        singleUserChatRequest.setUsername("user2");
+
         Chat chat = new Chat();
         chat.setCreator(anotherUser);
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
 
-        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, "newuser");
+        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, singleUserChatRequest);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         verify(chatService, never()).addParticipantToGroupChat(any(Chat.class), any(User.class));
@@ -129,13 +147,16 @@ public class ChatControllerTest {
         User admin = new User();
         admin.setUsername("admin");
 
+        SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
+        singleUserChatRequest.setUsername("user2");
+
         Chat chat = new Chat();
         chat.setCreator(admin);
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
         when(userService.findByUsername(anyString())).thenReturn(new User());
 
-        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, "user");
+        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, singleUserChatRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(chatService, times(1)).removeParticipantFromGroupChat(any(Chat.class), any(User.class));
@@ -146,9 +167,12 @@ public class ChatControllerTest {
         User admin = new User();
         admin.setUsername("admin");
 
+        SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
+        singleUserChatRequest.setUsername("user2");
+
         when(chatService.getById(anyLong())).thenReturn(Optional.empty());
 
-        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, "user");
+        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, singleUserChatRequest);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(chatService, never()).removeParticipantFromGroupChat(any(Chat.class), any(User.class));
@@ -159,6 +183,9 @@ public class ChatControllerTest {
         User admin = new User();
         admin.setUsername("admin");
 
+        SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
+        singleUserChatRequest.setUsername("user2");
+
         User anotherUser = new User();
         anotherUser.setUsername("anotherUser");
 
@@ -167,7 +194,7 @@ public class ChatControllerTest {
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
 
-        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, "user");
+        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, singleUserChatRequest);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         verify(chatService, never()).removeParticipantFromGroupChat(any(Chat.class), any(User.class));
