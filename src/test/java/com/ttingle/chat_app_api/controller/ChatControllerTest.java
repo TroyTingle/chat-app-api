@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,7 +25,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ChatControllerTest {
+class ChatControllerTest {
 
     @Mock
     ChatService chatService;
@@ -36,7 +37,7 @@ public class ChatControllerTest {
     ChatController chatController;
 
     @Test
-    public void testCreateOneToOneChat_Success() {
+    void testCreateOneToOneChat_Success() {
         User user = new User();
         user.setUsername("user1");
 
@@ -58,7 +59,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testCreateGroupChat_Success() {
+    void testCreateGroupChat_Success() {
         User user = new User();
         user.setUsername("user1");
 
@@ -76,7 +77,7 @@ public class ChatControllerTest {
 
         when(userService.findByUsername("user2")).thenReturn(participant1);
         when(userService.findByUsername("user3")).thenReturn(participant2);
-        when(chatService.createGroupChat(any(User.class), any(Set.class), anyString())).thenReturn(chat);
+        when(chatService.createGroupChat(any(User.class), any(Set.class))).thenReturn(chat);
 
         ResponseEntity<Chat> response = chatController.createGroupChat(user, groupChatRequest);
 
@@ -85,7 +86,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testAddParticipantToGroupChat_Success() {
+    void testAddParticipantToGroupChat_Success() {
         User admin = new User();
         admin.setUsername("admin");
 
@@ -93,7 +94,7 @@ public class ChatControllerTest {
         singleUserChatRequest.setUsername("user2");
 
         Chat chat = new Chat();
-        chat.setCreator(admin);
+        chat.setParticipants(Set.of(admin));
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
         when(userService.findByUsername(anyString())).thenReturn(new User());
@@ -105,7 +106,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testAddParticipantToGroupChat_ChatNotFound() {
+    void testAddParticipantToGroupChat_ChatNotFound() {
         User admin = new User();
         admin.setUsername("admin");
 
@@ -121,7 +122,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testAddParticipantToGroupChat_Forbidden() {
+    void testAddParticipantToGroupChat_Forbidden() {
         User admin = new User();
         admin.setUsername("admin");
 
@@ -132,7 +133,7 @@ public class ChatControllerTest {
         singleUserChatRequest.setUsername("user2");
 
         Chat chat = new Chat();
-        chat.setCreator(anotherUser);
+        chat.setParticipants(new HashSet<>());
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
 
@@ -143,7 +144,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testRemoveParticipantFromGroupChat_Success() {
+    void testRemoveParticipantFromGroupChat_Success() {
         User admin = new User();
         admin.setUsername("admin");
 
@@ -151,7 +152,7 @@ public class ChatControllerTest {
         singleUserChatRequest.setUsername("user2");
 
         Chat chat = new Chat();
-        chat.setCreator(admin);
+        chat.setParticipants(Set.of(admin));
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
         when(userService.findByUsername(anyString())).thenReturn(new User());
@@ -163,7 +164,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testRemoveParticipantFromGroupChat_ChatNotFound() {
+    void testRemoveParticipantFromGroupChat_ChatNotFound() {
         User admin = new User();
         admin.setUsername("admin");
 
@@ -179,7 +180,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testRemoveParticipantFromGroupChat_Forbidden() {
+    void testRemoveParticipantFromGroupChat_Forbidden() {
         User admin = new User();
         admin.setUsername("admin");
 
@@ -190,7 +191,7 @@ public class ChatControllerTest {
         anotherUser.setUsername("anotherUser");
 
         Chat chat = new Chat();
-        chat.setCreator(anotherUser);
+        chat.setParticipants(new HashSet<>());
 
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
 
@@ -201,7 +202,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testGetChatById_Success() {
+    void testGetChatById_Success() {
         Chat chat = new Chat();
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
 
@@ -212,7 +213,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testGetChatById_NotFound() {
+    void testGetChatById_NotFound() {
         when(chatService.getById(anyLong())).thenReturn(Optional.empty());
 
         ResponseEntity<Chat> response = chatController.getChatById(1L);
@@ -221,7 +222,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testGetAllChatsForUser_Success() {
+    void testGetAllChatsForUser_Success() {
         User user = new User();
         List<Chat> chats = List.of(new Chat(), new Chat());
         when(chatService.getAllChatsForUser(user)).thenReturn(chats);
@@ -233,7 +234,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testDeleteChat_Success() {
+    void testDeleteChat_Success() {
         User user = new User();
         Chat chat = new Chat();
         when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
@@ -245,7 +246,7 @@ public class ChatControllerTest {
     }
 
     @Test
-    public void testDeleteChat_NotFound() {
+    void testDeleteChat_NotFound() {
         User user = new User();
         when(chatService.getById(anyLong())).thenReturn(Optional.empty());
 

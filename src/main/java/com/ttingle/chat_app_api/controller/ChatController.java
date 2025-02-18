@@ -44,16 +44,16 @@ public class ChatController {
                 .map(userService::findByUsername)
                 .collect(Collectors.toSet());
 
-        Chat chat = chatService.createGroupChat(user, participantSet, groupChatRequest.getGroupName());
+        Chat chat = chatService.createGroupChat(user, participantSet);
         return new ResponseEntity<>(chat, HttpStatus.CREATED);
     }
 
     @PostMapping("/{chatId}/participants")
-    public ResponseEntity<Void> addParticipantToGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User admin, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+    public ResponseEntity<Void> addParticipantToGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User user, @RequestBody SingleUserChatRequest singleUserChatRequest) {
         Optional<Chat> chatOptional = chatService.getById(chatId);
         if (chatOptional.isPresent()) {
             Chat chat = chatOptional.get();
-            if(chat.getCreator() != admin) {
+            if(!chat.getParticipants().contains(user)) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
             User newParticipant = userService.findByUsername(singleUserChatRequest.getUsername());
@@ -66,11 +66,11 @@ public class ChatController {
     }
 
     @DeleteMapping("/{chatId}/participants")
-    public ResponseEntity<Void> removeParticipantFromGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User admin, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+    public ResponseEntity<Void> removeParticipantFromGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User user, @RequestBody SingleUserChatRequest singleUserChatRequest) {
         Optional<Chat> chatOptional = chatService.getById(chatId);
         if (chatOptional.isPresent()) {
             Chat chat = chatOptional.get();
-            if(chat.getCreator() != admin) {
+            if(!chat.getParticipants().contains(user)) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
             User participant = userService.findByUsername(singleUserChatRequest.getUsername());

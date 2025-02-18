@@ -14,10 +14,6 @@ public class Chat {
     @Column(nullable = false)
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "creator_id", nullable = false)
-    private User creator;
-
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Message> messages;
 
@@ -44,14 +40,6 @@ public class Chat {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public User getCreator() {
-        return creator;
-    }
-
-    public void setCreator(User creator) {
-        this.creator = creator;
     }
 
     public Set<Message> getMessages() {

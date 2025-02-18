@@ -45,13 +45,12 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Username not found: " + username));
         List<GrantedAuthority> authorities =  new ArrayList<>(Collections.emptyList());
         authorities.add((GrantedAuthority) () -> user.getRole().name());
-
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
+        return user;
     }
 
     @Transactional
     public void createUser(String username, String email, String password){
         User newUser = UserFactory.createUser(username, email, password);
-        this.saveUser(newUser);
+        userRepository.save(newUser);
     }
 }
