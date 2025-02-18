@@ -2,9 +2,14 @@ package com.ttingle.chat_app_api.model;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "friend_requests")
-public class FriendRequest {
+public class FriendRequest implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

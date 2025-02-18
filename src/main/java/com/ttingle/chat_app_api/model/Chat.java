@@ -2,21 +2,21 @@ package com.ttingle.chat_app_api.model;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.util.Set;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-public class Chat {
+public class Chat implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String name;
-
-    @ManyToOne
-    @JoinColumn(name = "creator_id", nullable = false)
-    private User creator;
 
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Message> messages;
@@ -44,14 +44,6 @@ public class Chat {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public User getCreator() {
-        return creator;
-    }
-
-    public void setCreator(User creator) {
-        this.creator = creator;
     }
 
     public Set<Message> getMessages() {

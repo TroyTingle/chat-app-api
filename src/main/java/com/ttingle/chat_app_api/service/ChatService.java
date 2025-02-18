@@ -7,6 +7,7 @@ import com.ttingle.chat_app_api.repository.ChatRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,16 +26,17 @@ public class ChatService {
     public Chat createOneToOneChat(User user1, User user2) {
         Chat chat = new Chat();
         chat.setName(user1.getUsername() + " & " + user2.getUsername());
-        chat.setCreator(user1);
         chat.setParticipants(Set.of(user1, user2));
+        chat.setMessages(new HashSet<>());
         return chatRepository.save(chat);
     }
 
     @Transactional
-    public Chat createGroupChat(User creator, Set<User> participants, String name) {
+    public Chat createGroupChat(User creator, Set<User> participants) {
         Chat chat = new Chat();
-        chat.setName(name);
-        chat.setCreator(creator);
+        chat.setName(creator.getUsername() + participants.stream()
+                .map(User::getUsername)
+                .collect(Collectors.joining(", ")));
         chat.setParticipants(participants);
         chat.getParticipants().add(creator);
         return chatRepository.save(chat);
@@ -61,13 +63,13 @@ public class ChatService {
     public List<Chat> getAllChatsForUser(User user) {
         return chatRepository.findAll().stream()
                 .filter(chat -> chat.getParticipants().contains(user))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional
     public void deleteChat(Chat chat, User user) {
-        if (!chat.getCreator().equals(user)) {
-            throw new ChatDeletionException("Only the creator of the chat can delete it");
+        if (!chat.getParticipants().contains(user)) {
+            throw new ChatDeletionException("User is not a participant of the chat");
         }
         chatRepository.delete(chat);
     }

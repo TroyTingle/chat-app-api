@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ChatServiceTest {
+class ChatServiceTest {
 
     @Mock
     private ChatRepository chatRepository;
@@ -25,7 +25,7 @@ public class ChatServiceTest {
     private ChatService chatService;
 
     @Test
-    public void testCreateOneToOneChat() {
+   void testCreateOneToOneChat() {
         User user1 = new User();
         user1.setUsername("user1");
         User user2 = new User();
@@ -33,7 +33,6 @@ public class ChatServiceTest {
 
         Chat chat = new Chat();
         chat.setName("user1 & user2");
-        chat.setCreator(user1);
         chat.setParticipants(Set.of(user1, user2));
 
         when(chatRepository.save(any(Chat.class))).thenReturn(chat);
@@ -42,13 +41,12 @@ public class ChatServiceTest {
 
         assertNotNull(createdChat);
         assertEquals("user1 & user2", createdChat.getName());
-        assertEquals(user1, createdChat.getCreator());
         assertTrue(createdChat.getParticipants().contains(user1));
         assertTrue(createdChat.getParticipants().contains(user2));
     }
 
     @Test
-    public void testCreateGroupChat() {
+    void testCreateGroupChat() {
         User creator = new User();
         creator.setUsername("creator");
         Set<User> participants = new HashSet<>();
@@ -58,23 +56,21 @@ public class ChatServiceTest {
 
         Chat chat = new Chat();
         chat.setName("Group Chat");
-        chat.setCreator(creator);
         chat.setParticipants(participants);
         chat.getParticipants().add(creator);
 
         when(chatRepository.save(any(Chat.class))).thenReturn(chat);
 
-        Chat createdChat = chatService.createGroupChat(creator, participants, "Group Chat");
+        Chat createdChat = chatService.createGroupChat(creator, participants);
 
         assertNotNull(createdChat);
         assertEquals("Group Chat", createdChat.getName());
-        assertEquals(creator, createdChat.getCreator());
         assertTrue(createdChat.getParticipants().contains(creator));
         assertTrue(createdChat.getParticipants().contains(participant));
     }
 
     @Test
-    public void testAddParticipantToGroupChat() {
+    void testAddParticipantToGroupChat() {
         Chat chat = new Chat();
         chat.setParticipants(new HashSet<>());
         User participant = new User();
@@ -87,7 +83,7 @@ public class ChatServiceTest {
     }
 
     @Test
-    public void testRemoveParticipantFromGroupChat() {
+    void testRemoveParticipantFromGroupChat() {
         Chat chat = new Chat();
         chat.setParticipants(new HashSet<>());
         User participant = new User();
@@ -101,7 +97,7 @@ public class ChatServiceTest {
     }
 
     @Test
-    public void testGetById() {
+    void testGetById() {
         Chat chat = new Chat();
         chat.setId(1L);
         when(chatRepository.findById(1L)).thenReturn(Optional.of(chat));
@@ -113,22 +109,21 @@ public class ChatServiceTest {
     }
 
     @Test
-    public void testDeleteChat_Creator() {
-        User creator = new User();
+    void testDeleteChat_Participant() {
+        User user = new User();
         Chat chat = new Chat();
-        chat.setCreator(creator);
+        chat.setParticipants(Set.of(user));
 
-        chatService.deleteChat(chat, creator);
+        chatService.deleteChat(chat, user);
 
         verify(chatRepository, times(1)).delete(chat);
     }
 
     @Test
-    public void testDeleteChat_NotCreator() {
-        User creator = new User();
+    void testDeleteChat_NotParticipant() {
         User user = new User();
         Chat chat = new Chat();
-        chat.setCreator(creator);
+        chat.setParticipants(new HashSet<>());
 
         assertThrows(ChatDeletionException.class, () -> chatService.deleteChat(chat, user));
         verify(chatRepository, never()).delete(chat);
