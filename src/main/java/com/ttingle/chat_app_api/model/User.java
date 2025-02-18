@@ -9,6 +9,7 @@ import java.util.*;
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
@@ -27,10 +28,10 @@ public class User implements UserDetails {
     private Role role;
 
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FriendRequest> sentRequests;
+    private Set<FriendRequest> sentRequests;
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FriendRequest> receivedRequests;
+    private Set<FriendRequest> receivedRequests;
 
     @ManyToMany
     @JoinTable(
@@ -40,7 +41,12 @@ public class User implements UserDetails {
     )
     private Set<User> friends = new HashSet<>();
 
-    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany
+    @JoinTable(
+            name = "user_chats",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "chat_id")
+    )
     private Set<Chat> chats;
 
     // Getter and Setters
@@ -84,19 +90,19 @@ public class User implements UserDetails {
         this.role = role;
     }
 
-    public List<FriendRequest> getSentRequests() {
+    public Set<FriendRequest> getSentRequests() {
         return sentRequests;
     }
 
-    public void setSentRequests(List<FriendRequest> sentRequests) {
+    public void setSentRequests(Set<FriendRequest> sentRequests) {
         this.sentRequests = sentRequests;
     }
 
-    public List<FriendRequest> getReceivedRequests() {
+    public Set<FriendRequest> getReceivedRequests() {
         return receivedRequests;
     }
 
-    public void setReceivedRequests(List<FriendRequest> receivedRequests) {
+    public void setReceivedRequests(Set<FriendRequest> receivedRequests) {
         this.receivedRequests = receivedRequests;
     }
 
