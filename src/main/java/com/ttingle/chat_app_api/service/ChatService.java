@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +56,7 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Chat> getById(Long id) {
+    public Optional<Chat> getById(UUID id) {
         return chatRepository.findById(id);
     }
 

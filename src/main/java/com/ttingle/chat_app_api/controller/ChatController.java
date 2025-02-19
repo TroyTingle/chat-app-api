@@ -10,12 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -32,28 +34,31 @@ public class ChatController {
     }
 
     @PostMapping("/1-2-1")
-    public ResponseEntity<Chat> createOneToOneChat(@AuthenticationPrincipal User user, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+    public ResponseEntity<Chat> createOneToOneChat(@AuthenticationPrincipal UserDetails userDetails, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+        User requestUser = userService.findByUsername(userDetails.getUsername());
         User participant = userService.findByUsername(singleUserChatRequest.getUsername());
-        Chat chat = chatService.createOneToOneChat(user, participant);
+        Chat chat = chatService.createOneToOneChat(requestUser, participant);
         return new ResponseEntity<>(chat, HttpStatus.CREATED);
     }
 
     @PostMapping("/group")
-    public ResponseEntity<Chat> createGroupChat(@AuthenticationPrincipal User user, @RequestBody GroupChatRequest groupChatRequest) {
+    public ResponseEntity<Chat> createGroupChat(@AuthenticationPrincipal UserDetails userDetails, @RequestBody GroupChatRequest groupChatRequest) {
+        User requestUser = userService.findByUsername(userDetails.getUsername());
         Set<User> participantSet = Arrays.stream(groupChatRequest.getParticipants())
                 .map(userService::findByUsername)
                 .collect(Collectors.toSet());
 
-        Chat chat = chatService.createGroupChat(user, participantSet);
+        Chat chat = chatService.createGroupChat(requestUser, participantSet);
         return new ResponseEntity<>(chat, HttpStatus.CREATED);
     }
 
     @PostMapping("/{chatId}/participants")
-    public ResponseEntity<Void> addParticipantToGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User user, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+    public ResponseEntity<Void> addParticipantToGroupChat(@PathVariable UUID chatId, @AuthenticationPrincipal UserDetails userDetails, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+        User requestUser = userService.findByUsername(userDetails.getUsername());
         Optional<Chat> chatOptional = chatService.getById(chatId);
         if (chatOptional.isPresent()) {
             Chat chat = chatOptional.get();
-            if(!chat.getParticipants().contains(user)) {
+            if(!chat.getParticipants().contains(requestUser)) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
             User newParticipant = userService.findByUsername(singleUserChatRequest.getUsername());
@@ -66,11 +71,12 @@ public class ChatController {
     }
 
     @DeleteMapping("/{chatId}/participants")
-    public ResponseEntity<Void> removeParticipantFromGroupChat(@PathVariable Long chatId, @AuthenticationPrincipal User user, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+    public ResponseEntity<Void> removeParticipantFromGroupChat(@PathVariable UUID chatId, @AuthenticationPrincipal UserDetails userDetails, @RequestBody SingleUserChatRequest singleUserChatRequest) {
+        User requestUser = userService.findByUsername(userDetails.getUsername());
         Optional<Chat> chatOptional = chatService.getById(chatId);
         if (chatOptional.isPresent()) {
             Chat chat = chatOptional.get();
-            if(!chat.getParticipants().contains(user)) {
+            if(!chat.getParticipants().contains(requestUser)) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
             User participant = userService.findByUsername(singleUserChatRequest.getUsername());
@@ -82,22 +88,24 @@ public class ChatController {
     }
 
     @GetMapping("/{chatId}")
-    public ResponseEntity<Chat> getChatById(@PathVariable Long chatId) {
+    public ResponseEntity<Chat> getChatById(@PathVariable UUID chatId) {
         Optional<Chat> chatOptional = chatService.getById(chatId);
         return chatOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<Chat>> getAllChatsForUser(@AuthenticationPrincipal User user) {
-        List<Chat> chats = chatService.getAllChatsForUser(user);
+    public ResponseEntity<List<Chat>> getAllChatsForUser(@AuthenticationPrincipal UserDetails userDetails) {
+        User requestUser = userService.findByUsername(userDetails.getUsername());
+        List<Chat> chats = chatService.getAllChatsForUser(requestUser);
         return ResponseEntity.ok(chats);
     }
 
     @DeleteMapping("/{chatId}")
-    public ResponseEntity<Void> deleteChat(@PathVariable Long chatId, @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> deleteChat(@PathVariable UUID chatId, @AuthenticationPrincipal UserDetails userDetails) {
+        User requestUser = userService.findByUsername(userDetails.getUsername());
         Optional<Chat> chatOptional = chatService.getById(chatId);
         if (chatOptional.isPresent()) {
-            chatService.deleteChat(chatOptional.get(), user);
+            chatService.deleteChat(chatOptional.get(), requestUser);
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.notFound().build();

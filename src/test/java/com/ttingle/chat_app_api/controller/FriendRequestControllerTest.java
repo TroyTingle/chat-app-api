@@ -14,13 +14,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class FriendRequestControllerTest {
+class FriendRequestControllerTest {
 
     @Mock
     private FriendRequestService friendRequestService;
@@ -32,7 +33,7 @@ public class FriendRequestControllerTest {
     private FriendRequestController friendRequestController;
 
     @Test
-    public void testSendFriendRequest_Success() {
+    void testSendFriendRequest_Success() {
         User sender = new User();
         sender.setUsername("sender");
 
@@ -52,31 +53,34 @@ public class FriendRequestControllerTest {
     }
 
     @Test
-    public void testAcceptFriendRequest_Success() {
+    void testAcceptFriendRequest_Success() {
         User recipient = new User();
         recipient.setUsername("recipient");
+        UUID id = UUID.randomUUID();
 
-        ResponseEntity<String> response = friendRequestController.acceptFriendRequest(recipient, 1L);
+        ResponseEntity<String> response = friendRequestController.acceptFriendRequest(recipient, id);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Friend request accepted", response.getBody());
-        verify(friendRequestService, times(1)).respondToFriendRequest(recipient, 1L, true);
+        verify(friendRequestService, times(1)).respondToFriendRequest(recipient, id, true);
     }
 
     @Test
-    public void testRejectFriendRequest_Success() {
+    void testRejectFriendRequest_Success() {
         User recipient = new User();
         recipient.setUsername("recipient");
 
-        ResponseEntity<String> response = friendRequestController.rejectFriendRequest(recipient, 1L);
+        UUID id = UUID.randomUUID();
+
+        ResponseEntity<String> response = friendRequestController.rejectFriendRequest(recipient, id);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Friend request rejected", response.getBody());
-        verify(friendRequestService, times(1)).respondToFriendRequest(recipient, 1L, false);
+        verify(friendRequestService, times(1)).respondToFriendRequest(recipient, id, false);
     }
 
     @Test
-    public void testGetFriendRequests_Success() {
+    void testGetFriendRequests_Success() {
         User user = new User();
         user.setUsername("user");
 

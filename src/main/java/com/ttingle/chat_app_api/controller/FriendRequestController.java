@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/friend-request")
@@ -34,13 +35,13 @@ public class FriendRequestController {
     }
 
     @PostMapping("/accept/{requestId}")
-    public ResponseEntity<String> acceptFriendRequest(@AuthenticationPrincipal User recipient, @PathVariable Long requestId) {
+    public ResponseEntity<String> acceptFriendRequest(@AuthenticationPrincipal User recipient, @PathVariable UUID requestId) {
         friendRequestService.respondToFriendRequest(recipient, requestId, true);
         return new ResponseEntity<>("Friend request accepted", HttpStatus.OK);
     }
 
     @PostMapping("/reject/{requestId}")
-    public ResponseEntity<String> rejectFriendRequest(@AuthenticationPrincipal User recipient, @PathVariable Long requestId) {
+    public ResponseEntity<String> rejectFriendRequest(@AuthenticationPrincipal User recipient, @PathVariable UUID requestId) {
         friendRequestService.respondToFriendRequest(recipient, requestId, false);
         return new ResponseEntity<>("Friend request rejected", HttpStatus.OK);
     }

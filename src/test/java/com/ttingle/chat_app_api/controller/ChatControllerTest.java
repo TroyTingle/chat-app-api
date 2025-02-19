@@ -13,14 +13,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -38,8 +40,7 @@ class ChatControllerTest {
 
     @Test
     void testCreateOneToOneChat_Success() {
-        User user = new User();
-        user.setUsername("user1");
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
 
         SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
         singleUserChatRequest.setUsername("user2");
@@ -60,8 +61,8 @@ class ChatControllerTest {
 
     @Test
     void testCreateGroupChat_Success() {
-        User user = new User();
-        user.setUsername("user1");
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
+        User requestUser = new User();
 
         User participant1 = new User();
         participant1.setUsername("user2");
@@ -75,9 +76,10 @@ class ChatControllerTest {
 
         Chat chat = new Chat();
 
+        when(userService.findByUsername("user1")).thenReturn(requestUser);
         when(userService.findByUsername("user2")).thenReturn(participant1);
         when(userService.findByUsername("user3")).thenReturn(participant2);
-        when(chatService.createGroupChat(any(User.class), any(Set.class))).thenReturn(chat);
+        when(chatService.createGroupChat(eq(requestUser), any(Set.class))).thenReturn(chat);
 
         ResponseEntity<Chat> response = chatController.createGroupChat(user, groupChatRequest);
 
@@ -87,19 +89,19 @@ class ChatControllerTest {
 
     @Test
     void testAddParticipantToGroupChat_Success() {
-        User admin = new User();
-        admin.setUsername("admin");
-
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
+        User requestUser = new User();
         SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
         singleUserChatRequest.setUsername("user2");
 
         Chat chat = new Chat();
-        chat.setParticipants(Set.of(admin));
+        chat.setParticipants(Set.of(requestUser));
 
-        when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
-        when(userService.findByUsername(anyString())).thenReturn(new User());
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.of(chat));
+        when(userService.findByUsername(user.getUsername())).thenReturn(requestUser);
+        when(userService.findByUsername(singleUserChatRequest.getUsername())).thenReturn(new User());
 
-        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, singleUserChatRequest);
+        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(UUID.randomUUID(), user, singleUserChatRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(chatService, times(1)).addParticipantToGroupChat(any(Chat.class), any(User.class));
@@ -107,15 +109,14 @@ class ChatControllerTest {
 
     @Test
     void testAddParticipantToGroupChat_ChatNotFound() {
-        User admin = new User();
-        admin.setUsername("admin");
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
 
         SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
         singleUserChatRequest.setUsername("user2");
 
-        when(chatService.getById(anyLong())).thenReturn(Optional.empty());
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.empty());
 
-        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, singleUserChatRequest);
+        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(UUID.randomUUID(), user, singleUserChatRequest);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(chatService, never()).addParticipantToGroupChat(any(Chat.class), any(User.class));
@@ -123,8 +124,7 @@ class ChatControllerTest {
 
     @Test
     void testAddParticipantToGroupChat_Forbidden() {
-        User admin = new User();
-        admin.setUsername("admin");
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
 
         User anotherUser = new User();
         anotherUser.setUsername("anotherUser");
@@ -135,9 +135,9 @@ class ChatControllerTest {
         Chat chat = new Chat();
         chat.setParticipants(new HashSet<>());
 
-        when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.of(chat));
 
-        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(1L, admin, singleUserChatRequest);
+        ResponseEntity<Void> response = chatController.addParticipantToGroupChat(UUID.randomUUID(), user, singleUserChatRequest);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         verify(chatService, never()).addParticipantToGroupChat(any(Chat.class), any(User.class));
@@ -145,8 +145,8 @@ class ChatControllerTest {
 
     @Test
     void testRemoveParticipantFromGroupChat_Success() {
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
         User admin = new User();
-        admin.setUsername("admin");
 
         SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
         singleUserChatRequest.setUsername("user2");
@@ -154,10 +154,11 @@ class ChatControllerTest {
         Chat chat = new Chat();
         chat.setParticipants(Set.of(admin));
 
-        when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
-        when(userService.findByUsername(anyString())).thenReturn(new User());
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.of(chat));
+        when(userService.findByUsername(user.getUsername())).thenReturn(admin);
+        when(userService.findByUsername(singleUserChatRequest.getUsername())).thenReturn(new User());
 
-        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, singleUserChatRequest);
+        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(UUID.randomUUID(), user, singleUserChatRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(chatService, times(1)).removeParticipantFromGroupChat(any(Chat.class), any(User.class));
@@ -165,15 +166,14 @@ class ChatControllerTest {
 
     @Test
     void testRemoveParticipantFromGroupChat_ChatNotFound() {
-        User admin = new User();
-        admin.setUsername("admin");
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
 
         SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
         singleUserChatRequest.setUsername("user2");
 
-        when(chatService.getById(anyLong())).thenReturn(Optional.empty());
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.empty());
 
-        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, singleUserChatRequest);
+        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(UUID.randomUUID(), user, singleUserChatRequest);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(chatService, never()).removeParticipantFromGroupChat(any(Chat.class), any(User.class));
@@ -181,8 +181,7 @@ class ChatControllerTest {
 
     @Test
     void testRemoveParticipantFromGroupChat_Forbidden() {
-        User admin = new User();
-        admin.setUsername("admin");
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
 
         SingleUserChatRequest singleUserChatRequest = new SingleUserChatRequest();
         singleUserChatRequest.setUsername("user2");
@@ -193,9 +192,9 @@ class ChatControllerTest {
         Chat chat = new Chat();
         chat.setParticipants(new HashSet<>());
 
-        when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.of(chat));
 
-        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(1L, admin, singleUserChatRequest);
+        ResponseEntity<Void> response = chatController.removeParticipantFromGroupChat(UUID.randomUUID(), user, singleUserChatRequest);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         verify(chatService, never()).removeParticipantFromGroupChat(any(Chat.class), any(User.class));
@@ -204,9 +203,9 @@ class ChatControllerTest {
     @Test
     void testGetChatById_Success() {
         Chat chat = new Chat();
-        when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.of(chat));
 
-        ResponseEntity<Chat> response = chatController.getChatById(1L);
+        ResponseEntity<Chat> response = chatController.getChatById(UUID.randomUUID());
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(chat, response.getBody());
@@ -214,18 +213,21 @@ class ChatControllerTest {
 
     @Test
     void testGetChatById_NotFound() {
-        when(chatService.getById(anyLong())).thenReturn(Optional.empty());
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.empty());
 
-        ResponseEntity<Chat> response = chatController.getChatById(1L);
+        ResponseEntity<Chat> response = chatController.getChatById(UUID.randomUUID());
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void testGetAllChatsForUser_Success() {
-        User user = new User();
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
+        User requestUser = new User();
         List<Chat> chats = List.of(new Chat(), new Chat());
-        when(chatService.getAllChatsForUser(user)).thenReturn(chats);
+
+        when(userService.findByUsername(user.getUsername())).thenReturn(requestUser);
+        when(chatService.getAllChatsForUser(requestUser)).thenReturn(chats);
 
         ResponseEntity<List<Chat>> response = chatController.getAllChatsForUser(user);
 
@@ -235,22 +237,26 @@ class ChatControllerTest {
 
     @Test
     void testDeleteChat_Success() {
-        User user = new User();
-        Chat chat = new Chat();
-        when(chatService.getById(anyLong())).thenReturn(Optional.of(chat));
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
 
-        ResponseEntity<Void> response = chatController.deleteChat(1L, user);
+        User requestUser = new User();
+
+        Chat chat = new Chat();
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.of(chat));
+        when(userService.findByUsername(user.getUsername())).thenReturn(requestUser);
+
+        ResponseEntity<Void> response = chatController.deleteChat(UUID.randomUUID(), user);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(chatService, times(1)).deleteChat(chat, user);
+        verify(chatService, times(1)).deleteChat(chat, requestUser);
     }
 
     @Test
     void testDeleteChat_NotFound() {
-        User user = new User();
-        when(chatService.getById(anyLong())).thenReturn(Optional.empty());
+        UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
+        when(chatService.getById(any(UUID.class))).thenReturn(Optional.empty());
 
-        ResponseEntity<Void> response = chatController.deleteChat(1L, user);
+        ResponseEntity<Void> response = chatController.deleteChat(UUID.randomUUID(), user);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(chatService, never()).deleteChat(any(Chat.class), any(User.class));

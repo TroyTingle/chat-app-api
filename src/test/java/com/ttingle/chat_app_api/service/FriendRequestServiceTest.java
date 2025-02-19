@@ -12,14 +12,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class FriendRequestServiceTest {
+class FriendRequestServiceTest {
 
     @Mock
     private FriendRequestRepository friendRequestRepository;
@@ -30,8 +32,10 @@ public class FriendRequestServiceTest {
     @InjectMocks
     private FriendRequestService friendRequestService;
 
+    private static final UUID ID = UUID.randomUUID();
+
     @Test
-    public void testSendFriendRequest_Success() {
+    void testSendFriendRequest_Success() {
         User sender = new User();
         User receiver = new User();
 
@@ -43,7 +47,7 @@ public class FriendRequestServiceTest {
     }
 
     @Test
-    public void testSendFriendRequest_RequestAlreadyExists() {
+    void testSendFriendRequest_RequestAlreadyExists() {
         User sender = new User();
         User receiver = new User();
 
@@ -53,16 +57,18 @@ public class FriendRequestServiceTest {
     }
 
     @Test
-    public void testRespondToFriendRequest_Accept() {
+    void testRespondToFriendRequest_Accept() {
         User sender = new User();
+        sender.setFriends(new HashSet<>());
         User receiver = new User();
+        receiver.setFriends(new HashSet<>());
         FriendRequest request = new FriendRequest();
         request.setSender(sender);
         request.setReceiver(receiver);
 
-        when(friendRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+        when(friendRequestRepository.findById(ID)).thenReturn(Optional.of(request));
 
-        assertDoesNotThrow(() -> friendRequestService.respondToFriendRequest(receiver,1L, true));
+        assertDoesNotThrow(() -> friendRequestService.respondToFriendRequest(receiver,ID, true));
 
         assertEquals(FriendRequest.RequestStatus.ACCEPTED, request.getStatus());
         assertTrue(sender.getFriends().contains(receiver));
@@ -73,30 +79,30 @@ public class FriendRequestServiceTest {
     }
 
     @Test
-    public void testRespondToFriendRequest_Reject() {
+    void testRespondToFriendRequest_Reject() {
         User receiver = new User();
         FriendRequest request = new FriendRequest();
         request.setReceiver(receiver);
 
-        when(friendRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+        when(friendRequestRepository.findById(ID)).thenReturn(Optional.of(request));
 
-        assertDoesNotThrow(() -> friendRequestService.respondToFriendRequest(receiver, 1L, false));
+        assertDoesNotThrow(() -> friendRequestService.respondToFriendRequest(receiver, ID, false));
 
         assertEquals(FriendRequest.RequestStatus.REJECTED, request.getStatus());
         verify(friendRequestRepository, times(1)).save(request);
     }
 
     @Test
-    public void testRespondToFriendRequest_NotFound() {
+    void testRespondToFriendRequest_NotFound() {
         User receiver = new User();
 
-        when(friendRequestRepository.findById(1L)).thenReturn(Optional.empty());
+        when(friendRequestRepository.findById(ID)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> friendRequestService.respondToFriendRequest(receiver, 1L, true));
+        assertThrows(NotFoundException.class, () -> friendRequestService.respondToFriendRequest(receiver, ID, true));
     }
 
     @Test
-    public void testGetFriendRequestsForUser() {
+    void testGetFriendRequestsForUser() {
         User user = new User();
         FriendRequest request1 = new FriendRequest();
         FriendRequest request2 = new FriendRequest();
@@ -113,7 +119,7 @@ public class FriendRequestServiceTest {
     }
 
     @Test
-    public void testGetFriendRequestsForUser_NoRequests() {
+    void testGetFriendRequestsForUser_NoRequests() {
         User user = new User();
 
         when(friendRequestRepository.findAllByReceiver(user)).thenReturn(List.of());

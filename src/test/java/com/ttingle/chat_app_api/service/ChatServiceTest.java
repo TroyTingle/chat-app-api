@@ -10,7 +10,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -99,13 +102,14 @@ class ChatServiceTest {
     @Test
     void testGetById() {
         Chat chat = new Chat();
-        chat.setId(1L);
-        when(chatRepository.findById(1L)).thenReturn(Optional.of(chat));
+        UUID id = UUID.randomUUID();
+        chat.setId(id);
+        when(chatRepository.findById(id)).thenReturn(Optional.of(chat));
 
-        Optional<Chat> foundChat = chatService.getById(1L);
+        Optional<Chat> foundChat = chatService.getById(id);
 
         assertTrue(foundChat.isPresent());
-        assertEquals(1L, foundChat.get().getId());
+        assertEquals(id, foundChat.get().getId());
     }
 
     @Test

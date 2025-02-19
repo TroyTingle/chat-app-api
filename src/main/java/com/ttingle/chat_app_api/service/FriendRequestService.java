@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class FriendRequestService {
@@ -37,7 +38,7 @@ public class FriendRequestService {
     }
 
     @Transactional
-    public void respondToFriendRequest(User recipient, Long requestId, boolean accept) {
+    public void respondToFriendRequest(User recipient, UUID requestId, boolean accept) {
         FriendRequest request = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Friend request not found"));
 
