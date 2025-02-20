@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,26 +29,30 @@ public class FriendRequestController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<String> sendFriendRequest(@AuthenticationPrincipal User sender, @RequestBody AddFriendRequest friendRequest) {
+    public ResponseEntity<String> sendFriendRequest(@AuthenticationPrincipal UserDetails userDetails, @RequestBody AddFriendRequest friendRequest) {
+        User sender = userService.findByUsername(userDetails.getUsername());
         User recipient = userService.findByUsername(friendRequest.getUsername());
         friendRequestService.sendFriendRequest(sender, recipient);
         return new ResponseEntity<>("Friend request sent", HttpStatus.OK);
     }
 
     @PostMapping("/accept/{requestId}")
-    public ResponseEntity<String> acceptFriendRequest(@AuthenticationPrincipal User recipient, @PathVariable UUID requestId) {
+    public ResponseEntity<String> acceptFriendRequest(@AuthenticationPrincipal UserDetails userDetails, @PathVariable UUID requestId) {
+        User recipient = userService.findByUsername(userDetails.getUsername());
         friendRequestService.respondToFriendRequest(recipient, requestId, true);
         return new ResponseEntity<>("Friend request accepted", HttpStatus.OK);
     }
 
     @PostMapping("/reject/{requestId}")
-    public ResponseEntity<String> rejectFriendRequest(@AuthenticationPrincipal User recipient, @PathVariable UUID requestId) {
+    public ResponseEntity<String> rejectFriendRequest(@AuthenticationPrincipal UserDetails userDetails, @PathVariable UUID requestId) {
+        User recipient = userService.findByUsername(userDetails.getUsername());
         friendRequestService.respondToFriendRequest(recipient, requestId, false);
         return new ResponseEntity<>("Friend request rejected", HttpStatus.OK);
     }
 
     @GetMapping
-    public ResponseEntity<List<FriendRequest>> getFriendRequests(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<FriendRequest>> getFriendRequests(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByUsername(userDetails.getUsername());
         List<FriendRequest> friendRequests = friendRequestService.getFriendRequestsForUser(user);
         return new ResponseEntity<>(friendRequests, HttpStatus.OK);
     }

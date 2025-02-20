@@ -68,11 +68,11 @@ public class Message {
         this.sender = sender;
     }
 
-    public Chat getReceiver() {
+    public Chat getChat() {
         return chat;
     }
 
-    public void setReceiver(Chat chat) {
+    public void setChat(Chat chat) {
         this.chat = chat;
     }
 }
