@@ -7,7 +7,9 @@ import com.ttingle.chat_app_api.model.User;
 import com.ttingle.chat_app_api.service.UserService;
 import com.ttingle.chat_app_api.util.JwtTokenUtil;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,9 +18,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,17 +36,24 @@ public class UserAuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest){
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest loginRequest){
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
             UserDetails userDetails = userService.loadUserByUsername(loginRequest.getUsername());
             String token = jwtTokenUtil.generateToken(userDetails);
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-            response.put("type", "Bearer");
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+            ResponseCookie cookie = ResponseCookie.from("token", token)
+                    .httpOnly(true)
+                    .secure(false)
+                    .maxAge(7L * 24 * 60 * 60)
+                    .path("/")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body("Login Successful!");
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         } catch (Exception e) {
@@ -56,7 +62,7 @@ public class UserAuthController {
     }
 
     @PutMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest){
+    public ResponseEntity<String> signup(@Valid @RequestBody SignupRequest signupRequest){
         //Check if username already exists
         if (userService.existsByUsername(signupRequest.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");

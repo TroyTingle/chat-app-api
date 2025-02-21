@@ -15,14 +15,12 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/message")
 public class MessageController {
 
     private final ChatService chatService;
@@ -40,9 +38,9 @@ public class MessageController {
         this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
-    @MessageMapping("/{chatId}")
-    public void sendMessage(@AuthenticationPrincipal UserDetails userDetails, @DestinationVariable UUID chatId, @Payload ChatMessage chatMessage) {
-        Optional<Chat> chat = chatService.getById(chatId);
+    @MessageMapping("/chat/{chatId}")
+    public void sendMessage(@AuthenticationPrincipal UserDetails userDetails, @DestinationVariable String chatId, @Payload ChatMessage chatMessage) {
+        Optional<Chat> chat = chatService.getById(UUID.fromString(chatId));
 
         if(chat.isPresent()){
             // save the message to the database
@@ -51,8 +49,12 @@ public class MessageController {
             messageService.saveMessage(message);
 
             // Broadcast the message to all participants in the chat
-            simpMessagingTemplate.convertAndSend("/topic/chat/" + chatId, message);
+            simpMessagingTemplate.convertAndSend("/topic/chat/" + chatId, chatMessage);
         }
+    }
+
+    public ChatMessage[] getMessagesForChat(UUID chatId) {
+        return messageService.getMessagesForChat(chatId);
     }
 
 }

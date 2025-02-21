@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, UUID> {
+
+    Message[] getMessagesByChatId(UUID chatId);
 }
