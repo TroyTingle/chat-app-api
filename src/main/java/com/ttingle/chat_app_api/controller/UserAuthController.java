@@ -3,6 +3,7 @@ package com.ttingle.chat_app_api.controller;
 import com.ttingle.chat_app_api.dto.auth.LoginRequest;
 import com.ttingle.chat_app_api.dto.auth.SignupRequest;
 import com.ttingle.chat_app_api.dto.auth.UpdatePasswordRequest;
+import com.ttingle.chat_app_api.dto.auth.UserDto;
 import com.ttingle.chat_app_api.model.User;
 import com.ttingle.chat_app_api.service.UserService;
 import com.ttingle.chat_app_api.util.JwtTokenUtil;
@@ -61,7 +62,7 @@ public class UserAuthController {
         }
     }
 
-    @PutMapping("/signup")
+    @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody SignupRequest signupRequest){
         //Check if username already exists
         if (userService.existsByUsername(signupRequest.getUsername())) {
@@ -97,5 +98,15 @@ public class UserAuthController {
         user.setPassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
         userService.saveUser(user);
         return new ResponseEntity<>("Password updated successfully", HttpStatus.OK);
+    }
+
+    @GetMapping("/me")
+    public UserDto getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+
+        if (userDetails.getUsername() != null) {
+            User user = userService.findByUsername(userDetails.getUsername());
+            return new UserDto(user.getUsername());
+        }
+        return null;
     }
 }

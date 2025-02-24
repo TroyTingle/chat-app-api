@@ -13,8 +13,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
@@ -39,12 +37,12 @@ public class MessageController {
     }
 
     @MessageMapping("/chat/{chatId}")
-    public void sendMessage(@AuthenticationPrincipal UserDetails userDetails, @DestinationVariable String chatId, @Payload ChatMessage chatMessage) {
+    public void sendMessage(@DestinationVariable String chatId, @Payload ChatMessage chatMessage) {
         Optional<Chat> chat = chatService.getById(UUID.fromString(chatId));
 
         if(chat.isPresent()){
             // save the message to the database
-            User sender = userService.findByUsername(userDetails.getUsername());
+            User sender = userService.findByUsername(chatMessage.getSenderUsername());
             Message message = MessageFactory.createMessage(sender, chat.get(), chatMessage);
             messageService.saveMessage(message);
 
