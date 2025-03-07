@@ -1,5 +1,6 @@
 package com.ttingle.chat_app_api.controller;
 
+import com.ttingle.chat_app_api.dto.chat.ChatDto;
 import com.ttingle.chat_app_api.dto.chat.GroupChatRequest;
 import com.ttingle.chat_app_api.dto.chat.SingleUserChatRequest;
 import com.ttingle.chat_app_api.model.Chat;
@@ -224,12 +225,12 @@ class ChatControllerTest {
     void testGetAllChatsForUser_Success() {
         UserDetails user = new org.springframework.security.core.userdetails.User("user1", "password", Set.of((GrantedAuthority) () -> "ROLE_USER"));
         User requestUser = new User();
-        List<Chat> chats = List.of(new Chat(), new Chat());
+        List<ChatDto> chats = List.of(new ChatDto(), new ChatDto());
 
         when(userService.findByUsername(user.getUsername())).thenReturn(requestUser);
         when(chatService.getAllChatsForUser(requestUser)).thenReturn(chats);
 
-        ResponseEntity<List<Chat>> response = chatController.getAllChatsForUser(user);
+        ResponseEntity<List<ChatDto>> response = chatController.getAllChatsForUser(user);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(chats, response.getBody());

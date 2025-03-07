@@ -1,5 +1,8 @@
 package com.ttingle.chat_app_api.service;
 
+import com.ttingle.chat_app_api.dto.auth.UserDto;
+import com.ttingle.chat_app_api.dto.chat.ChatDto;
+import com.ttingle.chat_app_api.dto.message.MessageDto;
 import com.ttingle.chat_app_api.exceptions.ChatDeletionException;
 import com.ttingle.chat_app_api.model.Chat;
 import com.ttingle.chat_app_api.model.User;
@@ -61,10 +64,26 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public List<Chat> getAllChatsForUser(User user) {
-        return chatRepository.findAll().stream()
-                .filter(chat -> chat.getParticipants().contains(user))
-                .toList();
+    public List<ChatDto> getAllChatsForUser(User user) {
+        List<Chat> chats = chatRepository.findAllByParticipantsContaining(user);
+        return chats.stream()
+                .map(chat -> new ChatDto(
+                        chat.getId(),
+                        chat.getName(),
+                        chat.getMessages().stream()
+                                .map(message -> new MessageDto(
+                                        message.getId(),
+                                        message.getContent(),
+                                        message.getTimestamp(),
+                                        message.getSender().getUsername(),
+                                        chat.getId()
+                                ))
+                                .collect(Collectors.toSet()),
+                        chat.getParticipants().stream()
+                                .map(participant -> new UserDto(participant.getUsername()))
+                                .collect(Collectors.toSet())
+                ))
+                .collect(Collectors.toList());
     }
 
     @Transactional

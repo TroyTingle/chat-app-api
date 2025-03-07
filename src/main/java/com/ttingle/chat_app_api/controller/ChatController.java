@@ -1,5 +1,6 @@
 package com.ttingle.chat_app_api.controller;
 
+import com.ttingle.chat_app_api.dto.chat.ChatDto;
 import com.ttingle.chat_app_api.dto.chat.GroupChatRequest;
 import com.ttingle.chat_app_api.dto.chat.SingleUserChatRequest;
 import com.ttingle.chat_app_api.model.Chat;
@@ -94,9 +95,9 @@ public class ChatController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Chat>> getAllChatsForUser(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<ChatDto>> getAllChatsForUser(@AuthenticationPrincipal UserDetails userDetails) {
         User requestUser = userService.findByUsername(userDetails.getUsername());
-        List<Chat> chats = chatService.getAllChatsForUser(requestUser);
+        List<ChatDto> chats = chatService.getAllChatsForUser(requestUser);
         return ResponseEntity.ok(chats);
     }
 
