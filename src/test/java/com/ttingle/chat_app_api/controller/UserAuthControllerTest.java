@@ -19,15 +19,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UserAuthControllerTest {
+class UserAuthControllerTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -46,7 +44,7 @@ public class UserAuthControllerTest {
 
 
     @Test
-    public void testLogin_Success() {
+    void testLogin_Success() {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("password");
@@ -58,11 +56,11 @@ public class UserAuthControllerTest {
         ResponseEntity<?> response = userAuthController.login(loginRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("token", ((Map<String, String>) response.getBody()).get("token"));
+        assertEquals("Login Successful!", response.getBody());
     }
 
     @Test
-    public void testLogin_Failure() {
+    void testLogin_Failure() {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("wrongpassword");
@@ -75,7 +73,7 @@ public class UserAuthControllerTest {
     }
 
     @Test
-    public void testSignup_Success() {
+    void testSignup_Success() {
         SignupRequest signupRequest = new SignupRequest();
         signupRequest.setUsername("newuser");
         signupRequest.setEmail("newuser@example.com");
@@ -90,7 +88,7 @@ public class UserAuthControllerTest {
     }
 
     @Test
-    public void testSignup_UsernameExists() {
+    void testSignup_UsernameExists() {
         SignupRequest signupRequest = new SignupRequest();
         signupRequest.setUsername("existinguser");
         signupRequest.setEmail("existinguser@example.com");
@@ -105,7 +103,7 @@ public class UserAuthControllerTest {
     }
 
     @Test
-    public void testUpdatePassword_Success() {
+    void testUpdatePassword_Success() {
         UpdatePasswordRequest updatePasswordRequest = new UpdatePasswordRequest();
         updatePasswordRequest.setOldPassword("oldpassword");
         updatePasswordRequest.setNewPassword("newpassword");
@@ -129,7 +127,7 @@ public class UserAuthControllerTest {
     }
 
     @Test
-    public void testUpdatePassword_Unauthorized() {
+    void testUpdatePassword_Unauthorized() {
         UpdatePasswordRequest updatePasswordRequest = new UpdatePasswordRequest();
         updatePasswordRequest.setOldPassword("oldpassword");
         updatePasswordRequest.setNewPassword("newpassword");
@@ -144,7 +142,7 @@ public class UserAuthControllerTest {
     }
 
     @Test
-    public void testUpdatePassword_OldPasswordMismatch() {
+    void testUpdatePassword_OldPasswordMismatch() {
         UpdatePasswordRequest updatePasswordRequest = new UpdatePasswordRequest();
         updatePasswordRequest.setOldPassword("wrongoldpassword");
         updatePasswordRequest.setNewPassword("newpassword");
@@ -166,7 +164,7 @@ public class UserAuthControllerTest {
     }
 
     @Test
-    public void testLogin_EmptyUsernameAndPassword() {
+    void testLogin_EmptyUsernameAndPassword() {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("");
         loginRequest.setPassword("");
@@ -179,7 +177,7 @@ public class UserAuthControllerTest {
     }
 
     @Test
-    public void testUpdatePassword_SameOldAndNewPasswords() {
+    void testUpdatePassword_SameOldAndNewPasswords() {
         UpdatePasswordRequest updatePasswordRequest = new UpdatePasswordRequest();
         updatePasswordRequest.setOldPassword("samepassword");
         updatePasswordRequest.setNewPassword("samepassword");
