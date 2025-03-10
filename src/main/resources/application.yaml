@@ -2,7 +2,7 @@ spring:
   application:
     name: chat-app-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/chat_app
+    url: ${DB_USERNAME:jdbc:postgresql://localhost:5432/chat_app}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -22,3 +22,4 @@ logging:
         web: DEBUG
     com:
       ttingle: DEBUG
+URL: ${WEB_URL:localhost:5713}

@@ -22,6 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.ttingle.chat_app_api.util.Constants.WEB_URL;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -65,7 +67,7 @@ public class SecurityConfig {
 
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://127.0.0.1:5173","http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of(WEB_URL));
         configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT","OPTIONS"));
         configuration.setAllowCredentials(true);
         configuration.addAllowedHeader("*");
