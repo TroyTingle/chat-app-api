@@ -1,17 +1,27 @@
-# Use an official OpenJDK runtime as a base image
-FROM eclipse-temurin:21-jdk-alpine
+# Step 1: Build Stage
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy the local Maven repository into the container
-COPY . /app
+# Copy only necessary files to leverage Docker cache
+COPY pom.xml ./
+RUN mvn dependency:go-offline
 
-# Install Maven
-RUN apk add --no-cache maven
+# Copy the rest of the source code
+COPY src ./src
 
-# Build the app (this assumes you have a `pom.xml` file)
-RUN mvn clean install -DskipTests
+# Build the application (skip tests for faster builds)
+RUN mvn clean package -DskipTests
 
-# Command to run the app (this will depend on your project setup)
-CMD ["java", "-jar", "target/chat-app-api.jar"]
+# Step 2: Runtime Stage
+FROM eclipse-temurin:21-jdk-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy only the built JAR from the previous stage
+COPY --from=build /app/target/chat-app-api.jar /app/chat-app-api.jar
+
+# Command to run the application
+CMD ["java", "-jar", "/app/chat-app-api.jar"]
