@@ -2,6 +2,7 @@ package com.ttingle.chat_app_api.config;
 
 import com.ttingle.chat_app_api.service.UserService;
 import com.ttingle.chat_app_api.util.JwtRequestFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,8 +23,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.ttingle.chat_app_api.util.Constants.WEB_URL;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -31,6 +30,8 @@ public class SecurityConfig {
 
     private final UserService userService;
     private final JwtRequestFilter jwtRequestFilter;
+    @Value("${WEB_URL}")
+    private String webUrl;
 
     public SecurityConfig(UserService userService, JwtRequestFilter jwtRequestFilter){
         this.userService = userService;
@@ -67,7 +68,7 @@ public class SecurityConfig {
 
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(WEB_URL));
+        configuration.setAllowedOrigins(List.of(webUrl));
         configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT","OPTIONS"));
         configuration.setAllowCredentials(true);
         configuration.addAllowedHeader("*");
