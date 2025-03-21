@@ -50,6 +50,7 @@ public class UserAuthController {
                     .secure(true)
                     .maxAge(7L * 24 * 60 * 60)
                     .path("/")
+                    .sameSite("None")
                     .build();
 
             return ResponseEntity.ok()
