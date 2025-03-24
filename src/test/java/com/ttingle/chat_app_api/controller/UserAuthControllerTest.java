@@ -19,6 +19,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -48,6 +51,9 @@ class UserAuthControllerTest {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("password");
+        Map<String, String> expectedResponse = new HashMap<>();
+        expectedResponse.put("token", "token");
+        expectedResponse.put("type", "Bearer");
 
         UserDetails userDetails = mock(UserDetails.class);
         when(userService.loadUserByUsername(anyString())).thenReturn(userDetails);
@@ -56,7 +62,7 @@ class UserAuthControllerTest {
         ResponseEntity<?> response = userAuthController.login(loginRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Login Successful!", response.getBody());
+        assertEquals(expectedResponse, response.getBody());
     }
 
     @Test
