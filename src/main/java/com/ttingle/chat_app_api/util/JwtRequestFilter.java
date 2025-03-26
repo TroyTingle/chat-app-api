@@ -50,7 +50,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (jwtToken != null) {
-            LOGGER.debug("Token: {}", jwtToken);
             try {
                 username = jwtTokenUtil.extractUsername(jwtToken);
             } catch (IllegalArgumentException e) {
